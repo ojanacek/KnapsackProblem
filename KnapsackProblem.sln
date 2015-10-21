@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnapsackProblem.BruteForce", "KnapsackProblem.BruteForce\KnapsackProblem.BruteForce.csproj", "{F1874205-A569-4348-9791-898A2F161DEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnapsackProblem.BFvsHeuristics", "KnapsackProblem.BFvsHeuristics\KnapsackProblem.BFvsHeuristics.csproj", "{F1874205-A569-4348-9791-898A2F161DEF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnapsackProblem.Common", "KnapsackProblem.Common\KnapsackProblem.Common.csproj", "{D69E0ECC-70C5-41C3-ABBA-E4F385E6982A}"
 EndProject
