@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnapsackProblem.BFvsHeurist
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnapsackProblem.Common", "KnapsackProblem.Common\KnapsackProblem.Common.csproj", "{D69E0ECC-70C5-41C3-ABBA-E4F385E6982A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KnapsackProblem.DynamicPrgVsFPTAS", "KnapsackProblem.DynamicPrgVsFPTAS\KnapsackProblem.DynamicPrgVsFPTAS.csproj", "{0BBDCED6-5D5A-40D1-B17A-43183A95CEAF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{D69E0ECC-70C5-41C3-ABBA-E4F385E6982A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D69E0ECC-70C5-41C3-ABBA-E4F385E6982A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D69E0ECC-70C5-41C3-ABBA-E4F385E6982A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BBDCED6-5D5A-40D1-B17A-43183A95CEAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BBDCED6-5D5A-40D1-B17A-43183A95CEAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BBDCED6-5D5A-40D1-B17A-43183A95CEAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BBDCED6-5D5A-40D1-B17A-43183A95CEAF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
