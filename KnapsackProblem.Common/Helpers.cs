@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -32,13 +31,13 @@ namespace KnapsackProblem.Common
                             .ToList();
         } 
 
-        private static void PrepareBenchmark(Func<Knapsack, Tuple<int, BitArray>> knapsackSolver, IEnumerable<Knapsack> testKnapsacks)
+        private static void PrepareBenchmark(Func<Knapsack, KnapsackSolution> solveKnapsack, IEnumerable<Knapsack> testKnapsacks)
         {
             Console.WriteLine("Warming up ...");
             foreach (var knapsack in testKnapsacks)
             {
-                var result = knapsackSolver(knapsack);
-                Console.WriteLine(result.Item1); // so that it's not optimized away
+                var result = solveKnapsack(knapsack);
+                Console.WriteLine(result.BestPrice); // so that it's not optimized away
             }
             Console.Clear();
 
@@ -46,18 +45,18 @@ namespace KnapsackProblem.Common
             Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.High;
             Thread.CurrentThread.Priority = ThreadPriority.Highest;
 
-            Console.WriteLine("Warm up finished. Starting test ...");
+            Console.WriteLine($"Warm up finished. Starting {solveKnapsack.Method.Name} test ...");
         }
 
-        public static void Benchmark(Func<Knapsack, Tuple<int, BitArray>> knapsackSolver, int repeatEachSet, int loadKnapsacksAmount, IEnumerable<IEnumerable<Knapsack>> knapsackSets)
+        public static void Benchmark(Func<Knapsack, KnapsackSolution> solveKnapsack, int repeatEachSet, int testAmount, IEnumerable<IEnumerable<Knapsack>> knapsackSets, List<KnapsackSolution> solutions = null)
         {
-            PrepareBenchmark(knapsackSolver, knapsackSets.First());
+            PrepareBenchmark(solveKnapsack, knapsackSets.First());
 
             var bfWatch = new Stopwatch();
 
             foreach (var knapsackSet in knapsackSets)
             {
-                var knapsacks = knapsackSet.ToList();
+                var knapsacks = knapsackSet.Take(testAmount).ToList();
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -68,40 +67,18 @@ namespace KnapsackProblem.Common
                     foreach (var knapsack in knapsacks)
                     {
                         bfWatch.Start();
-                        knapsackSolver(knapsack);
+                        var solution = solveKnapsack(knapsack);
                         bfWatch.Stop();
+                        solutions?.Add(solution);
                     }
                 }
 
-                double instanceAverage = bfWatch.ElapsedMilliseconds / ((double)loadKnapsacksAmount * repeatEachSet);
+                double instanceAverage = bfWatch.ElapsedMilliseconds / ((double)testAmount * repeatEachSet);
                 Console.WriteLine($"{knapsacks.First().InstanceSize}; {instanceAverage}ms");
                 bfWatch.Reset();
             }
 
             Console.WriteLine("Testing finished.");
-        }
-
-        /// <summary>
-        /// Returns a specific binary format of a ulong value.
-        /// </summary>
-        public static string ToReverseBinary(this ulong value, int binaryDigitsCount)
-        {
-            var sb = new StringBuilder();
-            int binaryDigits = 0;
-            while (value != 0)
-            {
-                sb.Append((value & 1) == 1 ? " 1" : " 0");
-                value >>= 1;
-                binaryDigits++;
-            }
-            
-            while (binaryDigits < binaryDigitsCount)
-            {
-                sb.Append(" 0");
-                binaryDigits++;
-            }
-
-            return sb.ToString();
         }
 
         public static Knapsack WithPriceFPTAS(this Knapsack knapsack, double error)
@@ -113,6 +90,14 @@ namespace KnapsackProblem.Common
 
             return new Knapsack(knapsack.Id, knapsack.Capacity, 
                 knapsack.Items.Select(i => new KnapsackItem(i.Weight, (ushort)(i.Price >> shiftBits))));
+        }
+
+        public static void SaveSolutions(List<KnapsackSolution> solutions)
+        {
+            for (int i = 0; i < solutions.Count; i += KnapsackLoader.KnapsackPerFile)
+            {
+                File.WriteAllLines($"solutions{solutions[i].Knapsack.InstanceSize}.txt", solutions.Skip(i).Take(KnapsackLoader.KnapsackPerFile).Select(s => s.ToString()));
+            }
         }
     }
 }

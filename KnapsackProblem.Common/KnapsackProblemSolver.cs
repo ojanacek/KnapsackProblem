@@ -6,16 +6,44 @@ namespace KnapsackProblem.Common
 {
     public static class KnapsackProblemSolver
     {
-        public static Tuple<uint, ulong> BruteForce(Knapsack knapsack)
+        public static KnapsackSolution BruteForce(Knapsack knapsack)
         {
-            var caseCount = Math.Pow(2, knapsack.InstanceSize); // total number of possible permutations
+            var caseCount = Math.Pow(2, knapsack.InstanceSize);
             ulong bestCase = 0;
-            uint bestPrice = 0;
-
-            // try all permutations
+            int bestPrice = 0;
+            
             for (ulong currentCase = 1; currentCase <= caseCount; currentCase++)
             {
-                uint permutationPrice = 0, permutationWeight = 0;
+                int permutationPrice = 0, permutationWeight = 0;
+                for (int i = 0; i < knapsack.Items.Count; i++)
+                {
+                    if ((currentCase & (ulong)(1 << i)) == 0)
+                        continue;
+
+                    var currentItem = knapsack.Items[i];
+                    permutationPrice += currentItem.Price;
+                    permutationWeight += currentItem.Weight;
+                }
+
+                if (permutationWeight <= knapsack.Capacity && permutationPrice > bestPrice)
+                {
+                    bestPrice = permutationPrice;
+                    bestCase = currentCase;
+                }
+            }
+            
+            return new KnapsackSolution(bestPrice, bestCase, knapsack);
+        }
+
+        public static KnapsackSolution SmarterBruteForce(Knapsack knapsack)
+        {
+            var caseCount = Math.Pow(2, knapsack.InstanceSize);
+            ulong bestCase = 0;
+            int bestPrice = 0;
+
+            for (ulong currentCase = 1; currentCase <= caseCount; currentCase++)
+            {
+                int permutationPrice = 0, permutationWeight = 0;
                 for (int i = 0; i < knapsack.Items.Count; i++)
                 {
                     if ((currentCase & (ulong)(1 << i)) == 0)
@@ -29,26 +57,23 @@ namespace KnapsackProblem.Common
                         break;
                 }
 
-                if (permutationWeight > knapsack.Capacity)
-                    continue;
-
-                if (permutationPrice > bestPrice)
+                if (permutationWeight <= knapsack.Capacity && permutationPrice > bestPrice)
                 {
                     bestPrice = permutationPrice;
                     bestCase = currentCase;
                 }
             }
 
-            return Tuple.Create(bestPrice, bestCase);
+            return new KnapsackSolution(bestPrice, bestCase, knapsack);
         }
 
-        public static Tuple<uint, ulong> PriceToWeightRatioHeuristics(Knapsack knapsack)
+        public static KnapsackSolution PriceToWeightRatioHeuristics(Knapsack knapsack)
         {
             var itemsWithRatios = knapsack.Items.Select((item, index) => new { Item = item, Index = index, Ratio = item.Price / item.Weight })
                                                 .OrderByDescending(i => i.Ratio);
 
-            ulong currentCase = 0;
-            uint currentPrice = 0, currentWeight = 0;
+            var vector = new BitArray(knapsack.InstanceSize);
+            int currentPrice = 0, currentWeight = 0;
 
             foreach (var pack in itemsWithRatios)
             {
@@ -57,16 +82,16 @@ namespace KnapsackProblem.Common
 
                 currentPrice += pack.Item.Price;
                 currentWeight += pack.Item.Weight;
-                currentCase |= (ulong)(1 << pack.Index);
+                vector.Set(pack.Index, true);
 
                 if (currentWeight == knapsack.Capacity)
                     break;
             }
 
-            return Tuple.Create(currentPrice, currentCase);
+            return new KnapsackSolution(currentPrice, vector, knapsack);
         }
 
-        public static Tuple<int, BitArray> DynamicProgrammingByPrice(Knapsack knapsack)
+        public static KnapsackSolution DynamicProgrammingByPrice(Knapsack knapsack)
         {
             int totalPrice = knapsack.Items.Sum(i => i.Price);
             int rows = totalPrice + 1;
@@ -114,14 +139,14 @@ namespace KnapsackProblem.Common
             }
 
             // find the highest weight allowed
-            int highestPrice = 0;
+            int bestPrice = 0;
             int lastColumn = columns - 1;
             int row;
             for (row = totalPrice; row >= 0; row--)
             {
                 if (weights[row, lastColumn] < knapsack.Capacity)
                 {
-                    highestPrice = row;
+                    bestPrice = row;
                     break;
                 }
             }
@@ -141,7 +166,7 @@ namespace KnapsackProblem.Common
                 vector[--column] = true;
             }
 
-            return Tuple.Create(highestPrice, vector);
+            return new KnapsackSolution(bestPrice, vector, knapsack);
         }
     }
 }

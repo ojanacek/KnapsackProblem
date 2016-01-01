@@ -6,6 +6,8 @@ namespace KnapsackProblem.Common
 {
     public static class KnapsackLoader
     {
+        public const int KnapsackPerFile = 500;
+
         public static IEnumerable<Knapsack> LoadKnapsacks(string path, int maxKnapsacks)
         {
             return File.ReadLines(path).Take(maxKnapsacks).Select(ParseKnapsack);
