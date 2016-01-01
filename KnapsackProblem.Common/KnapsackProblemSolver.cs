@@ -144,7 +144,7 @@ namespace KnapsackProblem.Common
             int row;
             for (row = totalPrice; row >= 0; row--)
             {
-                if (weights[row, lastColumn] < knapsack.Capacity)
+                if (weights[row, lastColumn] <= knapsack.Capacity)
                 {
                     bestPrice = row;
                     break;
