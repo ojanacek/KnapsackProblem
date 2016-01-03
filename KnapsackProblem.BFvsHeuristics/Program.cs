@@ -68,7 +68,7 @@ namespace KnapsackProblem.BFvsHeuristics
                 var solutionFile = knapsacksFiles[i + 1];
                 var bestPrices = File.ReadAllLines(solutionFile).Select(line => double.Parse(line.Split()[2])).ToList();
 
-                var knapsacks = KnapsackLoader.LoadKnapsacks(file, 500).ToList();
+                var knapsacks = KnapsackLoader.LoadKnapsacks(file, KnapsackLoader.KnapsackPerFile).ToList();
                 for (int j = 0; j < knapsacks.Count; j++)
                 {
                     var result = solveKnapsack(knapsacks[j]);
@@ -77,7 +77,7 @@ namespace KnapsackProblem.BFvsHeuristics
             }
 
             Console.WriteLine($"Average relative error from {relativeErrors.Count} different errors is {relativeErrors.Average()}.");
-            Console.WriteLine("Max relative error is {0}.", relativeErrors.Max());
+            Console.WriteLine($"Max relative error is {relativeErrors.Max()}.");
         }
     }
 }
