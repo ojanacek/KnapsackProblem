@@ -29,12 +29,12 @@ namespace KnapsackProblem.KnapsackGenerator
             {
                 int totalWeight = Generator.GenerateInstance(generatorArgs, weights, costs);
                 overallTotalWeight += totalWeight;
-                sb.Append($"{generatorArgs.InitId + i} {generatorArgs.ItemsCount} {generatorArgs.Ratio * totalWeight}");
+                sb.Append($"{generatorArgs.InitId + i} {generatorArgs.ItemsCount} {(int)(generatorArgs.Ratio * totalWeight)}");
                 sb.AppendLine(string.Concat(weights.Zip(costs, (w, c) => $" {w} {c}")));
                 Console.WriteLine("total weight " + totalWeight);
             }
 
-            File.WriteAllText($"knap_{generatorArgs.ItemsCount.ToString().PadLeft(3, '0')}", sb.ToString());
+            File.WriteAllText($"knap_{generatorArgs.ItemsCount.ToString().PadLeft(3, '0')}.dat", sb.ToString());
             Console.WriteLine($"average total weight {overallTotalWeight / generatorArgs.InstancesCount}; first unused instance id {generatorArgs.InitId + generatorArgs.InstancesCount}");
             Console.ReadKey();
         }
@@ -57,7 +57,7 @@ namespace KnapsackProblem.KnapsackGenerator
                 double ratio = ParseDoubleOption(args, "m", true, 0, 1);
                 int maxWeight = ParseInt32Option(args, "W", true, 0, ushort.MaxValue);
                 int maxCost = ParseInt32Option(args, "C", true, 0, ushort.MaxValue);
-                double exponent = ParseDoubleOption(args, "k", true, 0, 1); // TODO: not sure with limits here
+                double exponent = ParseDoubleOption(args, "k", true, 0, 1);
                 int balance = ParseInt32Option(args, "d", true, -1, 1);
                 return new GeneratorArgs(initId, itemsCount, instancesCount, ratio, maxWeight, maxCost, exponent,
                     balance);

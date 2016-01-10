@@ -50,11 +50,18 @@ namespace KnapsackProblem.Common
 
         public static void Benchmark(Func<Knapsack, KnapsackSolution> solveKnapsack, int repeatEachSet, int testAmount, IEnumerable<IEnumerable<Knapsack>> knapsackSets, List<KnapsackSolution> solutions = null)
         {
-            PrepareBenchmark(solveKnapsack, knapsackSets.First());
+            var sets = knapsackSets.ToList();
+            if (sets.Count == 0)
+            {
+                Console.WriteLine("No test file was found. Check correct naming and extension.");
+                return;
+            }
+
+            PrepareBenchmark(solveKnapsack, sets.First());
 
             var bfWatch = new Stopwatch();
 
-            foreach (var knapsackSet in knapsackSets)
+            foreach (var knapsackSet in sets)
             {
                 var knapsacks = knapsackSet.Take(testAmount).ToList();
 

@@ -5,13 +5,13 @@ namespace KnapsackProblem.Common
 {
     public sealed class Knapsack
     {
-        public short Id { get; }
-        public short Capacity { get; }
+        public int Id { get; }
+        public int Capacity { get; }
         public int InstanceSize => Items.Count;
 
         public List<KnapsackItem> Items { get; }
 
-        public Knapsack(short id, short capacity, IEnumerable<KnapsackItem> items)
+        public Knapsack(int id, int capacity, IEnumerable<KnapsackItem> items)
         {
             Id = id;
             Capacity = capacity;
