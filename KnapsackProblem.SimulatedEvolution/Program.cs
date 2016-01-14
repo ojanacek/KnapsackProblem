@@ -37,7 +37,7 @@ namespace KnapsackProblem.SimulatedEvolution
             var knapsacks = KnapsackLoader.LoadKnapsacks(testFiles.First(), 1);
             var ga = new GeneticAlgorithm(genAlgArgs);
             var result = ga.Solve(knapsacks.First());
-            Console.WriteLine("BEST PRICE FOUND " + result.BestPrice);
+            Console.WriteLine("SOLUTION: " + result);
 
             Console.ReadLine();
         }

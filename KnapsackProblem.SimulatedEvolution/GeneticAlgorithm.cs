@@ -20,7 +20,7 @@ namespace KnapsackProblem.SimulatedEvolution
         public KnapsackSolution Solve(Knapsack knapsack)
         {
             chromosomeLength = knapsack.InstanceSize;
-            var population = CreatePopulation(args.PopulationSize);
+            var population = CreateInitialPopulation(args.PopulationSize);
             int generation = 0;
 
             while (true)
@@ -34,37 +34,31 @@ namespace KnapsackProblem.SimulatedEvolution
                 if (generation == args.MaxGenerations) // won't trigger if max generations is not set
                     break;
 
-                var newPopulation = new Chromosome[args.PopulationSize];
-                var breedingPool = new List<Chromosome>(args.PopulationSize);
-                int takeElites = 0;
-                if (args.ElitismDegree > 0)
-                {
-                    takeElites = (int) (args.PopulationSize * args.ElitismDegree);
-                    var elites = population.OrderByDescending(ch => ch.Fitness).Take(takeElites).ToArray();
-                    Array.Copy(elites, newPopulation, elites.Length);
-                }
+                int elitesCount = 0;
+                var newPopulation = CreateNewGeneration(population, out elitesCount);
 
-                for (int i = takeElites; i < args.PopulationSize; i++)
+                var breedingPool = new List<Chromosome>(args.PopulationSize - elitesCount);
+                for (int i = elitesCount; i < args.PopulationSize; i++)
                 {
                     breedingPool.Add(population.TakeRandom(args.TournamentSize, random).OrderByDescending(ch => ch.Fitness).First());
                 }
 
-                for (int i = takeElites; i < args.PopulationSize - 1; i++)
+                for (int i = elitesCount; i < args.PopulationSize - 1; i++)
                 {
-                    newPopulation[i] = Cross(breedingPool[i - takeElites], breedingPool[i + 1 - takeElites]);
+                    newPopulation[i] = Cross(breedingPool[i - elitesCount], breedingPool[i + 1 - elitesCount]);
                 }
-                newPopulation[args.PopulationSize - 1] = Cross(breedingPool[args.PopulationSize - 1 - takeElites], breedingPool[0]);
-                MutateRandomChromosome(newPopulation); // TODO: could be parametrized
+                newPopulation[args.PopulationSize - 1] = Cross(breedingPool[args.PopulationSize - 1 - elitesCount], breedingPool[0]);
+                MutateRandomChromosome(newPopulation, elitesCount); // TODO: could be parametrized
 
                 population = newPopulation;
                 generation++;
             }
 
-            var fittest = population.OrderBy(ch => ch.Fitness).First();
+            var fittest = population.OrderByDescending(ch => ch.Fitness).First();
             return new KnapsackSolution(fittest.Fitness, fittest.Gens, knapsack);
         }
 
-        private Chromosome[] CreatePopulation(int populationSize)
+        private Chromosome[] CreateInitialPopulation(int populationSize)
         {
             var population = new Chromosome[populationSize];
             var possibleChromosomesCount = (int)Math.Pow(2, chromosomeLength);
@@ -82,8 +76,25 @@ namespace KnapsackProblem.SimulatedEvolution
             return population;
         }
 
+        private Chromosome[] CreateNewGeneration(Chromosome[] currentPopulation, out int elitesCount)
+        {
+            var newGeneration = new Chromosome[args.PopulationSize];
+            elitesCount = 0;
+            if (args.ElitismDegree > 0)
+            {
+                elitesCount = (int)(args.PopulationSize * args.ElitismDegree);
+                var elites = currentPopulation.Where(ch => ch.Fitness > 0)
+                                              .OrderByDescending(ch => ch.Fitness)
+                                              .Take(elitesCount).ToArray();
+                elitesCount = elites.Length;
+                Array.Copy(elites, newGeneration, elites.Length);
+            }
+            return newGeneration;
+        }
+
         public static void EvaluateFitness(Chromosome chromosome, Knapsack knapsack)
         {
+            chromosome.Weight = chromosome.Fitness = 0;
             for (int i = 0; i < chromosome.Gens.Count; i++)
             {
                 if (chromosome.Gens.Get(i))
@@ -111,9 +122,9 @@ namespace KnapsackProblem.SimulatedEvolution
             return new Chromosome(newGens);
         }
 
-        private void MutateRandomChromosome(Chromosome[] population)
+        private void MutateRandomChromosome(Chromosome[] population, int skipElites)
         {
-            int randomChromosomeIndex = random.Next(0, population.Length);
+            int randomChromosomeIndex = random.Next(skipElites, population.Length);
             int randomGeneIndex = random.Next(0, chromosomeLength);
             population[randomChromosomeIndex].Gens[randomGeneIndex] = !population[randomChromosomeIndex].Gens[randomGeneIndex];
         }
