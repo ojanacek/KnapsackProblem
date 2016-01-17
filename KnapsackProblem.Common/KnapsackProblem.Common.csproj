@@ -33,6 +33,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArgumentHelpers.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Knapsack.cs" />
     <Compile Include="KnapsackItem.cs" />
