@@ -106,5 +106,14 @@ namespace KnapsackProblem.Common
                 File.WriteAllLines($"solutions{solutions[i].Knapsack.InstanceSize}.txt", solutions.Skip(i).Take(KnapsackLoader.KnapsackPerFile).Select(s => s.ToString()));
             }
         }
+
+        public static int[] LoadBestPricesFromSolutionFile(string filePath)
+        {
+            return File.ReadAllLines(filePath)
+                       .Select(line => int.Parse(line.Split()[2]))
+                       .ToArray();
+        }
+
+        public static double ComputeRelativeError(int bestPrice, int price) => (double)(bestPrice - price) / bestPrice;
     }
 }

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using KnapsackProblem.Common;
 using static KnapsackProblem.Common.ArgumentHelpers;
+using static KnapsackProblem.Common.Helpers;
 
 namespace KnapsackProblem.SimulatedEvolution
 {
@@ -33,7 +35,12 @@ namespace KnapsackProblem.SimulatedEvolution
             }
 
             if (bool.Parse(args[3]))
-                Common.Helpers.SaveSolutions(results);
+                SaveSolutions(results);
+
+            var bestPrices = LoadBestPricesFromSolutionFile(args[1]);
+            var relativeErrors = results.Select((result, index) => ComputeRelativeError(bestPrices[index], result.BestPrice)).ToList();
+            Console.WriteLine($"Average relative error is {relativeErrors.Average()}.");
+            Console.WriteLine($"Max relative error is {relativeErrors.Max()}.");
 
             Console.ReadLine();
         }

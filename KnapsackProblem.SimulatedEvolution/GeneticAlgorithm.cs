@@ -100,7 +100,7 @@ namespace KnapsackProblem.SimulatedEvolution
             chromosome.Weight = chromosome.Fitness = 0;
             for (int i = 0; i < chromosome.Gens.Count; i++)
             {
-                if (chromosome.Gens.Get(i))
+                if (chromosome.Gens[i])
                 {
                     var matchingItem = currentKnapsack.Items[i];
                     chromosome.Weight += matchingItem.Weight;
@@ -199,7 +199,7 @@ namespace KnapsackProblem.SimulatedEvolution
             int avgFitness = (int)population.Average(ch => ch.Fitness);
             int maxFitness = population.Max(ch => ch.Fitness);
             int totalFitness = population.Sum(ch => ch.Fitness);
-            Console.WriteLine($"Generation {generation.PadRight(3)}: Fitness; {minFitness.PadRight(6)}; {avgFitness.PadRight(6)}; {maxFitness.PadRight(6)}; {totalFitness.PadRight(8)}");
+            Console.WriteLine($"Generation {generation.PadLeft(3)}: Fitness; {minFitness.PadLeft(6)}; {avgFitness.PadLeft(6)}; {maxFitness.PadLeft(6)}; {totalFitness.PadLeft(8)}");
         }
     }
 }

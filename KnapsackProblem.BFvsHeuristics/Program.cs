@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using KnapsackProblem.Common;
+using static KnapsackProblem.Common.Helpers;
 
 namespace KnapsackProblem.BFvsHeuristics
 {
@@ -17,7 +18,7 @@ namespace KnapsackProblem.BFvsHeuristics
         */
         static void Main(string[] args)
         {
-            var testFiles = Helpers.LoadTestFiles(args);
+            var testFiles = LoadTestFiles(args);
             if (testFiles == null)
             {
                 Console.ReadLine();
@@ -40,12 +41,12 @@ namespace KnapsackProblem.BFvsHeuristics
             if (saveResults)
             {
                 var solutions = new List<KnapsackSolution>();
-                Helpers.Benchmark(solver, repeatFile, KnapsackLoader.KnapsackPerFile, knapsackSets, solutions);
-                Helpers.SaveSolutions(solutions);
+                Benchmark(solver, repeatFile, KnapsackLoader.KnapsackPerFile, knapsackSets, solutions);
+                SaveSolutions(solutions);
             }
             else
             {
-                Helpers.Benchmark(solver, repeatFile, KnapsackLoader.KnapsackPerFile, knapsackSets);
+                Benchmark(solver, repeatFile, KnapsackLoader.KnapsackPerFile, knapsackSets);
             }
 
             Console.ReadLine();
@@ -64,19 +65,17 @@ namespace KnapsackProblem.BFvsHeuristics
 
             for (int i = 0; i < knapsacksFiles.Count; i += 2)
             {
-                var file = knapsacksFiles[i];
-                var solutionFile = knapsacksFiles[i + 1];
-                var bestPrices = File.ReadAllLines(solutionFile).Select(line => double.Parse(line.Split()[2])).ToList();
+                var bestPrices = LoadBestPricesFromSolutionFile(knapsacksFiles[i + 1]);
+                var knapsacks = KnapsackLoader.LoadKnapsacks(knapsacksFiles[i], KnapsackLoader.KnapsackPerFile).ToList();
 
-                var knapsacks = KnapsackLoader.LoadKnapsacks(file, KnapsackLoader.KnapsackPerFile).ToList();
                 for (int j = 0; j < knapsacks.Count; j++)
                 {
                     var result = solveKnapsack(knapsacks[j]);
-                    relativeErrors.Add((bestPrices[j] - result.BestPrice) / bestPrices[j]);
+                    relativeErrors.Add(ComputeRelativeError(bestPrices[j], result.BestPrice));
                 }
             }
 
-            Console.WriteLine($"Average relative error from {relativeErrors.Count} different errors is {relativeErrors.Average()}.");
+            Console.WriteLine($"Average relative error is {relativeErrors.Average()}.");
             Console.WriteLine($"Max relative error is {relativeErrors.Max()}.");
         }
     }
