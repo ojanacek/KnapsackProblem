@@ -5,14 +5,18 @@
         public int PopulationSize { get; }
         public int MaxGenerations { get; }
         public int TournamentSize { get; }
-        public double ElitismDegree { get; }
+        public PopulationManagement PopulationManagement { get; set; }
+        public int ElitesCount { get; }
+        public double MutationProbability { get; set; }
 
-        public GeneticAlgorithmArgs(int populationSize, int maxGenerations, int tournamentSize, double elitismDegree)
+        public GeneticAlgorithmArgs(int populationSize, int maxGenerations, int tournamentSize, PopulationManagement populationManagement, int elitesCount, double mutationProbability)
         {
             PopulationSize = populationSize;
             MaxGenerations = maxGenerations;
             TournamentSize = tournamentSize;
-            ElitismDegree = elitismDegree;
+            PopulationManagement = populationManagement;
+            ElitesCount = elitesCount;
+            MutationProbability = mutationProbability;
         }
     }
 }

@@ -14,9 +14,9 @@ namespace KnapsackProblem.SimulatedEvolution
             }
         }
 
-        public static string PadRight(this int number, int totalWidth)
+        public static string PadRight<T>(this T item, int totalWidth)
         {
-            return number.ToString().PadLeft(totalWidth, ' ');
+            return item.ToString().PadLeft(totalWidth, ' ');
         }
     }
 }

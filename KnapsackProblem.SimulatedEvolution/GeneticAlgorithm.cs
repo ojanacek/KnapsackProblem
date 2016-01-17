@@ -10,6 +10,8 @@ namespace KnapsackProblem.SimulatedEvolution
     {
         private static readonly Random random = new Random();
         private readonly GeneticAlgorithmArgs args;
+        
+        private Knapsack currentKnapsack;
         private int chromosomeLength;
 
         public GeneticAlgorithm(GeneticAlgorithmArgs args)
@@ -19,38 +21,54 @@ namespace KnapsackProblem.SimulatedEvolution
 
         public KnapsackSolution Solve(Knapsack knapsack)
         {
+            currentKnapsack = knapsack;
             chromosomeLength = knapsack.InstanceSize;
-            var population = CreateInitialPopulation(args.PopulationSize);
+            
+            var population = CreateInitialPopulation();
             int generation = 0;
 
             while (true)
             {
-                foreach (var chromosome in population)
-                {
-                    EvaluateFitness(chromosome, knapsack);
-                }
-
                 PrintStatus(generation, population);
                 if (generation == args.MaxGenerations) // won't trigger if max generations is not set
                     break;
 
-                int elitesCount = 0;
-                var newPopulation = CreateNewGeneration(population, out elitesCount);
-
-                var breedingPool = new List<Chromosome>(args.PopulationSize - elitesCount);
-                for (int i = elitesCount; i < args.PopulationSize; i++)
+                List<Chromosome> parents;
+                switch (args.PopulationManagement)
                 {
-                    breedingPool.Add(population.TakeRandom(args.TournamentSize, random).OrderByDescending(ch => ch.Fitness).First());
-                }
+                    case PopulationManagement.ReplaceAll:
+                        parents = SelectParents(population, args.PopulationSize);
+                        for (int i = 0; i < args.PopulationSize - 1; i++)
+                        {
+                            population[i] = Cross(parents[i], parents[i + 1]);
+                        }
+                        population[args.PopulationSize - 1] = Cross(parents[args.PopulationSize - 1], parents[0]);
+                        break;
+                    case PopulationManagement.ReplaceAllButElites:
+                        int elitesCount = 0;
+                        var newPopulation = CreateNewGeneration(population, out elitesCount);
+                        parents = SelectParents(population, args.PopulationSize - elitesCount);
+                        
+                        for (int i = elitesCount; i < args.PopulationSize - 1; i++)
+                        {
+                            newPopulation[i] = Cross(parents[i - elitesCount], parents[i + 1 - elitesCount]);
+                        }
+                        newPopulation[args.PopulationSize - 1] = Cross(parents[args.PopulationSize - 1 - elitesCount], parents[0]);
+                        population = newPopulation;
+                        break;
+                    case PopulationManagement.ReplaceWeakest:
+                        parents = SelectParents(population, args.PopulationSize);
 
-                for (int i = elitesCount; i < args.PopulationSize - 1; i++)
-                {
-                    newPopulation[i] = Cross(breedingPool[i - elitesCount], breedingPool[i + 1 - elitesCount]);
+                        for (int i = 0; i < parents.Count - 1; i += 2)
+                        {
+                            var offspring = Cross(parents[i], parents[i + 1]);
+                            population[FindWeakest(population)] = offspring;
+                        }
+                        break;
+                    default:
+                        throw new ArgumentException("Invalid population management method.");
                 }
-                newPopulation[args.PopulationSize - 1] = Cross(breedingPool[args.PopulationSize - 1 - elitesCount], breedingPool[0]);
-                MutateRandomChromosome(newPopulation, elitesCount); // TODO: could be parametrized
-
-                population = newPopulation;
+                
                 generation++;
             }
 
@@ -58,58 +76,86 @@ namespace KnapsackProblem.SimulatedEvolution
             return new KnapsackSolution(fittest.Fitness, fittest.Gens, knapsack);
         }
 
-        private Chromosome[] CreateInitialPopulation(int populationSize)
+        private Chromosome[] CreateInitialPopulation()
         {
-            var population = new Chromosome[populationSize];
-            var possibleChromosomesCount = (int)Math.Pow(2, chromosomeLength);
-            for (int i = 0; i < populationSize; i++)
+            var population = new Chromosome[args.PopulationSize];
+
+            for (int i = 0; i < args.PopulationSize; i++)
             {
-                int randomNumber = random.Next(1, possibleChromosomesCount);
                 var gens = new BitArray(chromosomeLength);
                 for (int j = 0; j < chromosomeLength; j++)
                 {
-                    if ((randomNumber & (1 << j)) != 0)
+                    if (random.NextDouble() > .5)
                         gens.Set(j, true);
                 }
                 population[i] = new Chromosome(gens);
+                EvaluateFitness(population[i]);
             }
+
             return population;
         }
 
-        private Chromosome[] CreateNewGeneration(Chromosome[] currentPopulation, out int elitesCount)
-        {
-            var newGeneration = new Chromosome[args.PopulationSize];
-            elitesCount = 0;
-            if (args.ElitismDegree > 0)
-            {
-                elitesCount = (int)(args.PopulationSize * args.ElitismDegree);
-                var elites = currentPopulation.Where(ch => ch.Fitness > 0)
-                                              .OrderByDescending(ch => ch.Fitness)
-                                              .Take(elitesCount).ToArray();
-                elitesCount = elites.Length;
-                Array.Copy(elites, newGeneration, elites.Length);
-            }
-            return newGeneration;
-        }
-
-        public static void EvaluateFitness(Chromosome chromosome, Knapsack knapsack)
+        public void EvaluateFitness(Chromosome chromosome)
         {
             chromosome.Weight = chromosome.Fitness = 0;
             for (int i = 0; i < chromosome.Gens.Count; i++)
             {
                 if (chromosome.Gens.Get(i))
                 {
-                    var matchingItem = knapsack.Items[i];
+                    var matchingItem = currentKnapsack.Items[i];
                     chromosome.Weight += matchingItem.Weight;
                     chromosome.Fitness += matchingItem.Price;
                 }
 
-                if (chromosome.Weight > knapsack.Capacity)
+                if (chromosome.Weight > currentKnapsack.Capacity)
+                {
                     chromosome.Fitness = 0;
+                    break;
+                }
             }
         }
 
-        private static Chromosome Cross(Chromosome chromosome, Chromosome other)
+        private Chromosome[] CreateNewGeneration(Chromosome[] currentPopulation, out int elitesCount)
+        {
+            var newGeneration = new Chromosome[args.PopulationSize];
+            elitesCount = 0;
+            if (args.ElitesCount > 0)
+            {
+                var elites = currentPopulation.Where(ch => ch.Fitness > 0)
+                                              .OrderByDescending(ch => ch.Fitness)
+                                              .Take(args.ElitesCount).ToArray();
+                elitesCount = elites.Length;
+                Array.Copy(elites, newGeneration, elites.Length);
+            }
+            return newGeneration;
+        }
+
+        private List<Chromosome> SelectParents(Chromosome[] population, int parentsCount)
+        {
+            var breedingPool = new List<Chromosome>(args.PopulationSize);
+            for (int i = 0; i < parentsCount; i++)
+            {
+                breedingPool.Add(population.TakeRandom(args.TournamentSize, random).OrderByDescending(ch => ch.Fitness).First());
+            }
+            return breedingPool;
+        }
+
+        private int FindWeakest(Chromosome[] population)
+        {
+            int minFitness = population[0].Fitness;
+            int weakestIndex = 0;
+            for (int j = 1; j < args.PopulationSize; j++)
+            {
+                if (population[j].Fitness < minFitness)
+                {
+                    minFitness = population[j].Fitness;
+                    weakestIndex = j;
+                }
+            }
+            return weakestIndex;
+        }
+
+        private Chromosome Cross(Chromosome chromosome, Chromosome other)
         {
             // TODO: consider creating two offsprings instead of one
             var gensCount = chromosome.Gens.Length;
@@ -119,21 +165,28 @@ namespace KnapsackProblem.SimulatedEvolution
             {
                 newGens.Set(i, other.Gens.Get(i));
             }
-            return new Chromosome(newGens);
+            var offspring = new Chromosome(newGens);
+
+            if (random.NextDouble() > args.MutationProbability)
+                MutateRandomChromosome(offspring);
+
+            EvaluateFitness(offspring);
+            return offspring;
         }
 
-        private void MutateRandomChromosome(Chromosome[] population, int skipElites)
+        private void MutateRandomChromosome(Chromosome chromosome)
         {
-            int randomChromosomeIndex = random.Next(skipElites, population.Length);
             int randomGeneIndex = random.Next(0, chromosomeLength);
-            population[randomChromosomeIndex].Gens[randomGeneIndex] = !population[randomChromosomeIndex].Gens[randomGeneIndex];
+            chromosome.Gens[randomGeneIndex] = !chromosome.Gens[randomGeneIndex];
         }
 
         private static void PrintStatus(int generation, Chromosome[] population)
         {
+            int minFitness = population.Min(ch => ch.Fitness);
+            var avgFitness = population.Average(ch => ch.Fitness);
             int maxFitness = population.Max(ch => ch.Fitness);
             int totalFitness = population.Sum(ch => ch.Fitness);
-            Console.WriteLine($"Generation {generation.PadRight(2)}: max fitness - {maxFitness.PadRight(8)}, total fitness - {totalFitness.PadRight(8)}");
+            Console.WriteLine($"Generation {generation.PadRight(3)}: Fitness; {minFitness.PadRight(6)}; {avgFitness.PadRight(6)}; {maxFitness.PadRight(6)}; {totalFitness.PadRight(8)}");
         }
     }
 }
