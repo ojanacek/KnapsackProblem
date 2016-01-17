@@ -106,13 +106,10 @@ namespace KnapsackProblem.SimulatedEvolution
                     chromosome.Weight += matchingItem.Weight;
                     chromosome.Fitness += matchingItem.Price;
                 }
-
-                if (chromosome.Weight > currentKnapsack.Capacity)
-                {
-                    chromosome.Fitness = 0;
-                    break;
-                }
             }
+
+            if (chromosome.Weight > currentKnapsack.Capacity)
+                chromosome.Fitness = 0;
         }
 
         private Chromosome[] CreateNewGeneration(Chromosome[] currentPopulation, out int elitesCount)
@@ -132,10 +129,26 @@ namespace KnapsackProblem.SimulatedEvolution
 
         private List<Chromosome> SelectParents(Chromosome[] population, int parentsCount)
         {
+            int populationFitness = population.Sum(ch => ch.Fitness);
             var breedingPool = new List<Chromosome>(args.PopulationSize);
             for (int i = 0; i < parentsCount; i++)
             {
-                breedingPool.Add(population.TakeRandom(args.TournamentSize, random).OrderByDescending(ch => ch.Fitness).First());
+                if (args.ParentSelection == ParentSelection.Tournament)
+                    breedingPool.Add(population.TakeRandom(args.TournamentSize, random).OrderByDescending(ch => ch.Fitness).First());
+                else
+                {
+                    int randomPoint = random.Next(0, populationFitness + 1);
+                    int runningFitness = 0;
+                    for (int j = 0; j < args.PopulationSize; j++)
+                    {
+                        runningFitness += population[j].Fitness;
+                        if (runningFitness >= randomPoint)
+                        {
+                            breedingPool.Add(population[j]);
+                            break;
+                        }
+                    }
+                }
             }
             return breedingPool;
         }
@@ -167,7 +180,7 @@ namespace KnapsackProblem.SimulatedEvolution
             }
             var offspring = new Chromosome(newGens);
 
-            if (random.NextDouble() > args.MutationProbability)
+            if (random.NextDouble() < args.MutationProbability)
                 MutateRandomChromosome(offspring);
 
             EvaluateFitness(offspring);
@@ -183,7 +196,7 @@ namespace KnapsackProblem.SimulatedEvolution
         private static void PrintStatus(int generation, Chromosome[] population)
         {
             int minFitness = population.Min(ch => ch.Fitness);
-            var avgFitness = population.Average(ch => ch.Fitness);
+            int avgFitness = (int)population.Average(ch => ch.Fitness);
             int maxFitness = population.Max(ch => ch.Fitness);
             int totalFitness = population.Sum(ch => ch.Fitness);
             Console.WriteLine($"Generation {generation.PadRight(3)}: Fitness; {minFitness.PadRight(6)}; {avgFitness.PadRight(6)}; {maxFitness.PadRight(6)}; {totalFitness.PadRight(8)}");
