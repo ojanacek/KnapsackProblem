@@ -25,12 +25,12 @@ namespace KnapsackProblem.SimulatedEvolution
             chromosomeLength = knapsack.InstanceSize;
             
             var population = CreateInitialPopulation();
-            int generation = 0;
+            int generation = 0, noFitnessChangeFor = 0, lastBestFitness = 0;
 
             while (true)
             {
                 PrintStatus(generation, population);
-                if (generation == args.MaxGenerations) // won't trigger if max generations is not set
+                if (generation == args.MaxGenerations || noFitnessChangeFor == -args.MaxGenerations)
                     break;
 
                 List<Chromosome> parents;
@@ -68,8 +68,20 @@ namespace KnapsackProblem.SimulatedEvolution
                     default:
                         throw new ArgumentException("Invalid population management method.");
                 }
-                
+
                 generation++;
+
+                if (args.MaxGenerations < 0)
+                {
+                    int bestFitness = population.Max(ch => ch.Fitness);
+                    if (bestFitness == lastBestFitness)
+                        noFitnessChangeFor++;
+                    else
+                    {
+                        lastBestFitness = bestFitness;
+                        noFitnessChangeFor = 0;
+                    }
+                }
             }
 
             var fittest = population.OrderByDescending(ch => ch.Fitness).First();
