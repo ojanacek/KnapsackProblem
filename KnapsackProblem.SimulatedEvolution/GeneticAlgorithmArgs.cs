@@ -10,8 +10,10 @@
         public int ElitesCount { get; }
         public double MutationProbability { get; set; }
 
+        public bool PrintStatus { get; set; }
+
         public GeneticAlgorithmArgs(int populationSize, int maxGenerations, ParentSelection parentSelection, int tournamentSize, PopulationManagement populationManagement, 
-            int elitesCount, double mutationProbability)
+            int elitesCount, double mutationProbability, bool printStatus)
         {
             PopulationSize = populationSize;
             MaxGenerations = maxGenerations;
@@ -20,6 +22,7 @@
             PopulationManagement = populationManagement;
             ElitesCount = elitesCount;
             MutationProbability = mutationProbability;
+            PrintStatus = printStatus;
         }
     }
 }

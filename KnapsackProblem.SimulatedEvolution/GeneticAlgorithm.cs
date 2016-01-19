@@ -32,7 +32,8 @@ namespace KnapsackProblem.SimulatedEvolution
 
             while (true)
             {
-                PrintStatus(generation, population);
+                if (args.PrintStatus)
+                    PrintStatus(generation, population);
                 if (generation == args.MaxGenerations || noFitnessChangeFor == -args.MaxGenerations)
                     break;
 

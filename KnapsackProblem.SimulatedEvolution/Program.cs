@@ -62,8 +62,9 @@ namespace KnapsackProblem.SimulatedEvolution
                 var popMngmnt = (PopulationManagement)ParseInt32Option(args, "pm", true, 0, 2);
                 int elitesCount = ParseInt32Option(args, "e", popMngmnt == PopulationManagement.ReplaceAllButElites, 0, populationSize / 2);
                 var mutateProb = ParseDoubleOption(args, "m", true, 0, 1);
-                
-                return new GeneticAlgorithmArgs(populationSize, maxGenerations, parentSelection, tournamentSize, popMngmnt, elitesCount, mutateProb);
+                var printStatus = ParseInt32Option(args, "s", false, 0, 1);
+
+                return new GeneticAlgorithmArgs(populationSize, maxGenerations, parentSelection, tournamentSize, popMngmnt, elitesCount, mutateProb, printStatus == 1);
             }
             catch { return null; }
         }
@@ -72,7 +73,7 @@ namespace KnapsackProblem.SimulatedEvolution
         {
             var sb = new StringBuilder();
             sb.AppendLine();
-            sb.AppendLine("Usage: -p size -g count -ps method -t size -pm method -e count -m probability");
+            sb.AppendLine("Usage: -p size -g count -ps method -t size -pm method -e count -m probability [-s <0/1>]");
             sb.AppendLine();
             sb.AppendLine("Options:");
             sb.AppendOption("-p size", "Population size.");
@@ -82,6 +83,7 @@ namespace KnapsackProblem.SimulatedEvolution
             sb.AppendOption("-pm method", "Population management method. 0 - replace all, 1 - replace all but elites, 2 - replace weakest");
             sb.AppendOption("-e count", "# of a population's fittest pass to the next generation.");
             sb.AppendOption("-m probability", "Probability that a single random offspring's gen is mutated.");
+            sb.AppendOption("[-s <0/1>]", "Whether to print status with each new generation, 0 - no (default), 1 - yes.");
             Console.WriteLine(sb.ToString());
         }
     }
