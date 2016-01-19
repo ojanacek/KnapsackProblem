@@ -10,13 +10,16 @@ namespace KnapsackProblem.SimulatedEvolution
     {
         private static readonly Random random = new Random();
         private readonly GeneticAlgorithmArgs args;
-        
+
         private Knapsack currentKnapsack;
         private int chromosomeLength;
+
+        private readonly List<Chromosome> breedingPool;
 
         public GeneticAlgorithm(GeneticAlgorithmArgs args)
         {
             this.args = args;
+            breedingPool = new List<Chromosome>(args.PopulationSize);
         }
 
         public KnapsackSolution Solve(Knapsack knapsack)
@@ -142,11 +145,22 @@ namespace KnapsackProblem.SimulatedEvolution
         private List<Chromosome> SelectParents(Chromosome[] population, int parentsCount)
         {
             int populationFitness = population.Sum(ch => ch.Fitness);
-            var breedingPool = new List<Chromosome>(args.PopulationSize);
+            breedingPool.Clear();
+
             for (int i = 0; i < parentsCount; i++)
             {
                 if (args.ParentSelection == ParentSelection.Tournament)
-                    breedingPool.Add(population.TakeRandom(args.TournamentSize, random).OrderByDescending(ch => ch.Fitness).First());
+                {
+                    Chromosome fittest = null;
+                    for (int j = 0; j < args.TournamentSize; j++)
+                    {
+                        int randomIndex = random.Next(0, args.PopulationSize);
+                        var next = population[randomIndex];
+                        if (fittest == null || fittest.Fitness < next.Fitness)
+                            fittest = next;
+                    }
+                    breedingPool.Add(fittest);
+                }
                 else
                 {
                     int randomPoint = random.Next(0, populationFitness + 1);
@@ -162,6 +176,7 @@ namespace KnapsackProblem.SimulatedEvolution
                     }
                 }
             }
+
             return breedingPool;
         }
 
@@ -182,13 +197,11 @@ namespace KnapsackProblem.SimulatedEvolution
 
         private Chromosome Cross(Chromosome chromosome, Chromosome other)
         {
-            // TODO: consider creating two offsprings instead of one
-            var gensCount = chromosome.Gens.Length;
-            int randomCutIndex = random.Next(1, gensCount);
+            int randomCutIndex = random.Next(1, chromosomeLength);
             var newGens = new BitArray(chromosome.Gens);
-            for (int i = randomCutIndex; i < gensCount; i++)
+            for (int i = randomCutIndex; i < chromosomeLength; i++)
             {
-                newGens.Set(i, other.Gens.Get(i));
+                newGens.Set(i, other.Gens[i]);
             }
             var offspring = new Chromosome(newGens);
 

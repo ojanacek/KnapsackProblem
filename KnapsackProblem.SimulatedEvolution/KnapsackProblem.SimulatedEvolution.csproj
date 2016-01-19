@@ -44,7 +44,6 @@
     <Compile Include="PopulationManagement.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Helpers.cs" />
     <Compile Include="ParentSelection.cs" />
   </ItemGroup>
   <ItemGroup>

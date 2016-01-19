@@ -115,5 +115,10 @@ namespace KnapsackProblem.Common
         }
 
         public static double ComputeRelativeError(int bestPrice, int price) => (double)(bestPrice - price) / bestPrice;
+
+        public static string PadLeft<T>(this T item, int totalWidth)
+        {
+            return item.ToString().PadLeft(totalWidth, ' ');
+        }
     }
 }
